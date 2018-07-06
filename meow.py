@@ -88,9 +88,8 @@ RE_time = re.compile(r'.*?(( ?\d{1,2}\:\d{2} )|[tT]ime[sS]tamp[^i]|\d{12}Z0?).*?
 ###########################################################################################
 
 def isVisible(c):
-    if ord(c) > 31:
-        if ord(c) < 127:
-            return True
+    if ord(c) > 31 and ord(c) < 127:
+        return True
     else:
         return False
 
