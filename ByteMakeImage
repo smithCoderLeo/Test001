@@ -1,0 +1,84 @@
+#-*- coding:utf-8 -*-
+#根据代码绘制灰度图
+import numpy
+import os
+import matplotlib.pyplot as pyplot
+K = 1024 #换算单位
+Byte = 8
+directory_name = ""
+
+def main():
+    files = os.listdir(directory_name)
+    byte_files = [i for i in files]
+
+    for t, fname in enumerate(byte_files):
+        fileSize = os.path.getsize(directory_name + fname)/K # 获取文件大小，单位kB
+        imageWidth = getImageWidth(fileSize)#确定图片宽度
+
+        with open(directory_name + fname, mode='rb') as f:#以比特流的形式读入恶意代码
+            byteArr = code2Byte(f)
+            grayscale = byte2Grayscale(byteArr, imageWidth) #生成灰度数组
+            img_array = numpy.array(grayscale).reshape(len(grayscale) / imageWidth, imageWidth) #生成图片二维数组
+            pyplot.imshow(img_array, cmap="gray")
+            pyplot.savefig(fname + ".png")
+            #pyplot.show()
+
+def code2Byte(f): #代码转为byte
+    byteArr = ""
+    for line in f.readlines():
+        byteArr += "".join([bin(ord(c)).replace('0b', '') for c in line])  # 问题：此处替换了垂直制表符，会不会对代码结构有影响，会不会是编码问题
+
+    while len(byteArr) % Byte != 0: # 如果0不够，补零
+        byteArr += '0'
+
+    return byteArr
+
+def byte2Grayscale(byteArr, imageWidth):
+    str = ""
+    grayscale = []
+    index = 0
+
+    for c in byteArr: # 8位作为一个灰度值
+        str += c
+        index += 1
+
+        if index == 8:
+            index = 0
+            grayscale.append(str)
+            str = ""
+
+    # 每8个bit变成一个灰度值
+    for i in range(len(grayscale)):
+        tmp = int(grayscale[i], 2) #将二进制转成十进制
+        grayscale[i] = tmp
+
+    while len(grayscale) % imageWidth != 0:  # 若不能构成矩阵，则在后面补零
+        grayscale.append(0)
+
+    return grayscale
+
+def getImageWidth(size): #根据文件大小判断图片宽度
+    if size <= 0:
+        return 0
+
+    if size < 10:
+        imageWidth = 32
+    elif size >= 10 and size < 30:
+        imageWidth = 64
+    elif size >= 30 and size < 60:
+        imageWidth = 128
+    elif size >= 60 and size < 100:
+        imageWidth = 256
+    elif size >= 100 and size < 200:
+        imageWidth = 384
+    elif size >= 200 and size < 500:
+        imageWidth = 512
+    elif size >= 500 and size < 1000:
+        imageWidth = 768
+    elif size > 1000:
+        imageWidth = 1024
+
+    return imageWidth
+
+if __name__ == '__main__':
+    main()
