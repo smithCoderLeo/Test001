@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as pyplot
 K = 1024 #换算单位
 Byte = 8
-directory_name = ""
+directory_name = "D:/SrcRep/PycharmProjects/PEFileAnalyise/MalwareByteMakeImage/sample/special/"
 
 def main():
     files = os.listdir(directory_name)
@@ -24,33 +24,27 @@ def main():
             #pyplot.show()
 
 def code2Byte(f): #代码转为byte
-    byteArr = ""
-    for line in f.readlines():
-        byteArr += "".join([bin(ord(c)).replace('0b', '') for c in line])  # 问题：此处替换了垂直制表符，会不会对代码结构有影响，会不会是编码问题
+    #byteArr = numpy.fromfile(f, int)
+    byteArr = []
 
-    while len(byteArr) % Byte != 0: # 如果0不够，补零
-        byteArr += '0'
+    for line in f.readlines():
+        for c in line:
+            cStr = bin(ord(c)).replace('0b','') # 替换二进制标记
+            lenC = len(cStr)
+
+            if lenC < 8: #补充0
+                cStr = "0" * (8 - lenC) + cStr
+
+            byteArr.append(cStr)
 
     return byteArr
 
 def byte2Grayscale(byteArr, imageWidth):
-    str = ""
     grayscale = []
-    index = 0
-
-    for c in byteArr: # 8位作为一个灰度值
-        str += c
-        index += 1
-
-        if index == 8:
-            index = 0
-            grayscale.append(str)
-            str = ""
 
     # 每8个bit变成一个灰度值
-    for i in range(len(grayscale)):
-        tmp = int(grayscale[i], 2) #将二进制转成十进制
-        grayscale[i] = tmp
+    for i in range(len(byteArr)):
+        grayscale.append(int(byteArr[i], 2)) #将二进制转成十进制
 
     while len(grayscale) % imageWidth != 0:  # 若不能构成矩阵，则在后面补零
         grayscale.append(0)
@@ -58,9 +52,6 @@ def byte2Grayscale(byteArr, imageWidth):
     return grayscale
 
 def getImageWidth(size): #根据文件大小判断图片宽度
-    if size <= 0:
-        return 0
-
     if size < 10:
         imageWidth = 32
     elif size >= 10 and size < 30:
